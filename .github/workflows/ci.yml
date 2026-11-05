@@ -5,13 +5,19 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      acceptance:
+        description: Run tests against a configured Phare account
+        type: boolean
+        default: false
 
 permissions: {}
 
 jobs:
   unit:
     name: check
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
@@ -42,8 +48,11 @@ jobs:
 
   acceptance:
     name: Acceptance Tests
-    if: github.event_name == 'push'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    # Forks do not inherit the upstream account credentials.
+    if: >-
+      (github.event_name == 'push' && github.repository == 'phare/terraform-provider-phare') ||
+      (github.event_name == 'workflow_dispatch' && inputs.acceptance)
+    runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
       contents: read
